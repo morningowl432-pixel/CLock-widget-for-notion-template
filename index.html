@@ -10,7 +10,8 @@
       --clock-bg: #f8f9fa;
       --border: #e9ecef;
       --hand-main: #1a1a1a;
-      --hand-second: #bc473b; /* Premium quiet studio red */
+      --hand-second: #bc473b;
+      --number-color: #71717a;
     }
     [data-theme="dark"] {
       --bg: #191919;
@@ -18,6 +19,7 @@
       --border: #2e2e2e;
       --hand-main: #ffffff;
       --hand-second: #ef4444;
+      --number-color: #a1a1aa;
     }
     body {
       margin: 0;
@@ -54,7 +56,6 @@
       position: relative;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     }
-    /* Minimalist Hour Dashes around the dial rim */
     .ticks {
       position: absolute;
       width: 100%;
@@ -70,7 +71,22 @@
       transform-origin: bottom center;
       margin-left: -1px;
     }
-    /* Master hand placement mechanics */
+    /* Symmetrical layout numbering classes */
+    .num {
+      position: absolute;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--number-color);
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 20px;
+    }
+    .n12 { top: 12px; left: 50%; margin-left: -10px; }
+    .n3  { right: 12px; top: 50%; margin-top: -10px; }
+    .n6  { bottom: 12px; left: 50%; margin-left: -10px; }
+    .n9  { left: 12px; top: 50%; margin-top: -10px; }
+
     .hand {
       position: absolute;
       bottom: 50%;
@@ -91,7 +107,6 @@
       background: var(--hand-main);
       margin-left: -1.5px;
     }
-    /* Gliding continuous second arm */
     .second {
       width: 1.5px;
       height: 76px;
@@ -117,6 +132,12 @@
   <button class="toggle-btn" id="themeToggle">🌙</button>
 
   <div class="clock">
+    <!-- Hour Text Plates -->
+    <div class="num n12">12</div>
+    <div class="num n3">3</div>
+    <div class="num n6">6</div>
+    <div class="num n9">9</div>
+
     <div class="ticks" id="ticks"></div>
     <div class="hand hour" id="hour"></div>
     <div class="hand minute" id="minute"></div>
@@ -125,7 +146,6 @@
   </div>
 
   <script>
-    // --- 1. MEMORY THEME MANAGEMENT ---
     const toggleBtn = document.getElementById('themeToggle');
     const savedTheme = localStorage.getItem('notion-studio-clock-theme') || 'dark';
     
@@ -140,17 +160,16 @@
       localStorage.setItem('notion-studio-clock-theme', newTheme);
     });
 
-    // --- 2. GENERATE THE DIAL TICK DASHES ---
+    // Skips drawing a dash at 12, 3, 6, and 9 positions since numbers sit there now
     const ticksContainer = document.getElementById('ticks');
     for (let i = 0; i < 12; i++) {
+      if (i === 0 || i === 3 || i === 6 || i === 9) continue;
       const tick = document.createElement('div');
       tick.className = 'tick';
-      // Space ticks perfectly around the inner perimeter
       tick.style.transform = `rotate(${i * 30}deg) translateY(-84px)`;
       ticksContainer.appendChild(tick);
     }
 
-    // --- 3. HIGH-PERFORMANCE SMOOTH CLOCK ENGINE ---
     function runClock() {
       const now = new Date();
       const ms = now.getMilliseconds();
@@ -158,16 +177,13 @@
       const m = now.getMinutes() + s / 60;
       const h = now.getHours() + m / 60;
 
-      // Translate accurate timeline sweeps into smooth continuous degree shifts
       document.getElementById('second').style.transform = `rotate(${s * 6}deg)`;
       document.getElementById('minute').style.transform = `rotate(${m * 6}deg)`;
       document.getElementById('hour').style.transform = `rotate(${(h % 12) * 30}deg)`;
 
-      // Request next animation frame loops smoothly up to 60fps instead of blocky 1-second interval jumps
       requestAnimationFrame(runClock);
     }
     
-    // Fire engine
     requestAnimationFrame(runClock);
   </script>
 </body>
