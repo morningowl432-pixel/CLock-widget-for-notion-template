@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aesthetic Minimalist Flip Clock</title>
+  <title>Aesthetic Minimalist Studio Clock</title>
   <style>
     :root {
       --bg: #ffffff;
-      --card-bg: #f4f4f5;
-      --text: #18181b;
-      --border: #e4e4e7;
+      --clock-bg: #f8f9fa;
+      --border: #e9ecef;
+      --hand-main: #1a1a1a;
+      --hand-second: #bc473b; /* Premium quiet studio red */
     }
     [data-theme="dark"] {
       --bg: #191919;
-      --card-bg: #222222;
-      --text: #ffffff;
+      --clock-bg: #222222;
       --border: #2e2e2e;
+      --hand-main: #ffffff;
+      --hand-second: #ef4444;
     }
     body {
       margin: 0;
@@ -38,193 +40,135 @@
       cursor: pointer;
       padding: 6px 10px;
       font-size: 14px;
-      background-color: var(--card-bg);
-      color: var(--text);
+      background-color: var(--clock-bg);
+      color: var(--hand-main);
       transition: all 0.3s;
       z-index: 10;
     }
-    .clock-container {
-      display: flex;
-      gap: 16px;
-    }
-    .card-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .flip-card {
-      position: relative;
-      background: var(--card-bg);
+    .clock {
+      width: 190px;
+      height: 190px;
+      background-color: var(--clock-bg);
       border: 1px solid var(--border);
-      color: var(--text);
-      font-size: 54px;
-      font-weight: 700;
-      width: 75px;
-      height: 80px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      perspective: 300px;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
     }
-    /* The core flipping sheets */
-    .digit-panel {
+    /* Minimalist Hour Dashes around the dial rim */
+    .ticks {
       position: absolute;
-      left: 0;
       width: 100%;
-      height: 50%;
-      overflow: hidden;
-      box-sizing: border-box;
-      background: var(--card-bg);
+      height: 100%;
     }
-    .digit-panel.top {
-      top: 0;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-      line-height: 80px; /* Aligns number top half */
-    }
-    .digit-panel.bottom {
-      bottom: 0;
-      border-bottom-left-radius: 12px;
-      border-bottom-right-radius: 12px;
-      line-height: 0px; /* Aligns number bottom half */
-      display: flex;
-      align-items: flex-end;
-      justify-content: center;
-      height: 40px;
-    }
-    /* Flip Animation Layer */
-    .flipper {
+    .tick {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 50%;
-      transform-origin: bottom center;
-      transform-style: preserve-3d;
-      z-index: 3;
-      border-top-left-radius: 12px;
-      border-top-right-radius: 12px;
-    }
-    .flipper.animate {
-      animation: flip-down 0.4s ease-in-out forwards;
-    }
-    @keyframes flip-down {
-      100% { transform: rotateX(-180deg); }
-    }
-    /* Modern minimalist horizontal cut line across the middle */
-    .flip-card::after {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 50%;
-      width: 100%;
-      height: 1px;
+      width: 2px;
+      height: 6px;
       background: var(--border);
-      z-index: 5;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      margin-left: -1px;
     }
-    .labels {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text);
-      opacity: 0.4;
-      margin-top: 10px;
-      font-weight: 600;
+    /* Master hand placement mechanics */
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px;
+      z-index: 2;
+    }
+    .hour {
+      width: 4.5px;
+      height: 48px;
+      background: var(--hand-main);
+      margin-left: -2.25px;
+    }
+    .minute {
+      width: 3px;
+      height: 70px;
+      background: var(--hand-main);
+      margin-left: -1.5px;
+    }
+    /* Gliding continuous second arm */
+    .second {
+      width: 1.5px;
+      height: 76px;
+      background: var(--hand-second);
+      margin-left: -0.75px;
+      z-index: 3;
+    }
+    .center-pin {
+      width: 6px;
+      height: 6px;
+      background: var(--hand-main);
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      z-index: 4;
     }
   </style>
 </head>
 <body>
+
   <button class="toggle-btn" id="themeToggle">🌙</button>
-  
-  <div class="clock-container">
-    <div class="card-wrapper">
-      <div class="flip-card" id="hours-card">
-        <div class="digit-panel top" id="hr-top">00</div>
-        <div class="digit-panel bottom" id="hr-bottom">00</div>
-        <div class="flipper" id="hr-flipper"></div>
-      </div>
-      <div class="labels">HR</div>
-    </div>
-    <div class="card-wrapper">
-      <div class="flip-card" id="minutes-card">
-        <div class="digit-panel top" id="min-top">00</div>
-        <div class="digit-panel bottom" id="min-bottom">00</div>
-        <div class="flipper" id="min-flipper"></div>
-      </div>
-      <div class="labels">MIN</div>
-    </div>
-    <div class="card-wrapper">
-      <div class="flip-card" id="seconds-card">
-        <div class="digit-panel top" id="sec-top">00</div>
-        <div class="digit-panel bottom" id="sec-bottom">00</div>
-        <div class="flipper" id="sec-flipper"></div>
-      </div>
-      <div class="labels">SEC</div>
-    </div>
+
+  <div class="clock">
+    <div class="ticks" id="ticks"></div>
+    <div class="hand hour" id="hour"></div>
+    <div class="hand minute" id="minute"></div>
+    <div class="hand second" id="second"></div>
+    <div class="center-pin"></div>
   </div>
 
   <script>
-    // --- 1. THEME LOGIC: PERMANENT STORAGE & DEFAULT TO DARK ---
+    // --- 1. MEMORY THEME MANAGEMENT ---
     const toggleBtn = document.getElementById('themeToggle');
+    const savedTheme = localStorage.getItem('notion-studio-clock-theme') || 'dark';
     
-    // Retrieve stored theme, default to 'dark' if empty
-    const savedTheme = localStorage.getItem('notion-clock-theme') || 'dark';
     document.body.setAttribute('data-theme', savedTheme);
     toggleBtn.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
 
     toggleBtn.addEventListener('click', () => {
       const isDark = document.body.getAttribute('data-theme') === 'dark';
       const newTheme = isDark ? 'light' : 'dark';
-      
       document.body.setAttribute('data-theme', newTheme);
       toggleBtn.textContent = newTheme === 'dark' ? '🌙' : '☀️';
-      
-      // Save choice permanently in client container memory
-      localStorage.setItem('notion-clock-theme', newTheme);
+      localStorage.setItem('notion-studio-clock-theme', newTheme);
     });
 
-    // --- 2. ENGINE LOGIC: TRUE FLIPPING GRAPHICS ---
-    let lastTime = { hrs: '', mins: '', secs: '' };
-
-    function animateCard(cardId, flipperId, topId, bottomId, value) {
-      const topPanel = document.getElementById(topId);
-      const bottomPanel = document.getElementById(bottomId);
-      const flipper = document.getElementById(flipperId);
-
-      // Trigger 3D flip animation sheet if the card string number value updates
-      if (topPanel.textContent !== value) {
-        flipper.className = "flipper animate";
-        
-        // Mid-animation frame split updates text targets cleanly
-        setTimeout(() => {
-          topPanel.textContent = value;
-          bottomPanel.textContent = value;
-          flipper.className = "flipper";
-        }, 350);
-      }
+    // --- 2. GENERATE THE DIAL TICK DASHES ---
+    const ticksContainer = document.getElementById('ticks');
+    for (let i = 0; i < 12; i++) {
+      const tick = document.createElement('div');
+      tick.className = 'tick';
+      // Space ticks perfectly around the inner perimeter
+      tick.style.transform = `rotate(${i * 30}deg) translateY(-84px)`;
+      ticksContainer.appendChild(tick);
     }
 
-    function updateClock() {
+    // --- 3. HIGH-PERFORMANCE SMOOTH CLOCK ENGINE ---
+    function runClock() {
       const now = new Date();
-      const hrs = String(now.getHours()).padStart(2, '0');
-      const mins = String(now.getMinutes()).padStart(2, '0');
-      const secs = String(now.getSeconds()).padStart(2, '0');
-      
-      animateCard('hours-card', 'hr-flipper', 'hr-top', 'hr-bottom', hrs);
-      animateCard('minutes-card', 'min-flipper', 'min-top', 'min-bottom', mins);
-      animateCard('seconds-card', 'sec-flipper', 'sec-top', 'sec-bottom', secs);
+      const ms = now.getMilliseconds();
+      const s = now.getSeconds() + ms / 1000;
+      const m = now.getMinutes() + s / 60;
+      const h = now.getHours() + m / 60;
+
+      // Translate accurate timeline sweeps into smooth continuous degree shifts
+      document.getElementById('second').style.transform = `rotate(${s * 6}deg)`;
+      document.getElementById('minute').style.transform = `rotate(${m * 6}deg)`;
+      document.getElementById('hour').style.transform = `rotate(${(h % 12) * 30}deg)`;
+
+      // Request next animation frame loops smoothly up to 60fps instead of blocky 1-second interval jumps
+      requestAnimationFrame(runClock);
     }
-
-    // Set layout instantly on start, track ticks every second
-    const setupTime = new Date();
-    document.getElementById('hr-top').textContent = String(setupTime.getHours()).padStart(2, '0');
-    document.getElementById('hr-bottom').textContent = String(setupTime.getHours()).padStart(2, '0');
-    document.getElementById('min-top').textContent = String(setupTime.getMinutes()).padStart(2, '0');
-    document.getElementById('min-bottom').textContent = String(setupTime.getMinutes()).padStart(2, '0');
-    document.getElementById('sec-top').textContent = String(setupTime.getSeconds()).padStart(2, '0');
-    document.getElementById('sec-bottom').textContent = String(setupTime.getSeconds()).padStart(2, '0');
-
-    setInterval(updateClock, 1000);
+    
+    // Fire engine
+    requestAnimationFrame(runClock);
   </script>
 </body>
 </html>
