@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minimalist Flip Clock for Notion</title>
+  <title>Aesthetic Minimalist Flip Clock</title>
   <style>
     :root {
       --bg: #ffffff;
@@ -13,9 +13,9 @@
     }
     [data-theme="dark"] {
       --bg: #191919;
-      --card-bg: #202020;
+      --card-bg: #222222;
       --text: #ffffff;
-      --border: #2f2f2f;
+      --border: #2e2e2e;
     }
     body {
       margin: 0;
@@ -39,26 +39,79 @@
       padding: 6px 10px;
       font-size: 14px;
       background-color: var(--card-bg);
+      color: var(--text);
       transition: all 0.3s;
       z-index: 10;
     }
     .clock-container {
       display: flex;
-      gap: 12px;
+      gap: 16px;
+    }
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     .flip-card {
+      position: relative;
       background: var(--card-bg);
       border: 1px solid var(--border);
       color: var(--text);
-      font-size: 48px;
+      font-size: 54px;
       font-weight: 700;
-      padding: 15px 20px;
+      width: 75px;
+      height: 80px;
       border-radius: 12px;
-      min-width: 60px;
       text-align: center;
-      position: relative;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      perspective: 300px;
     }
+    /* The core flipping sheets */
+    .digit-panel {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      overflow: hidden;
+      box-sizing: border-box;
+      background: var(--card-bg);
+    }
+    .digit-panel.top {
+      top: 0;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+      line-height: 80px; /* Aligns number top half */
+    }
+    .digit-panel.bottom {
+      bottom: 0;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      line-height: 0px; /* Aligns number bottom half */
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 40px;
+    }
+    /* Flip Animation Layer */
+    .flipper {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      transform-origin: bottom center;
+      transform-style: preserve-3d;
+      z-index: 3;
+      border-top-left-radius: 12px;
+      border-top-right-radius: 12px;
+    }
+    .flipper.animate {
+      animation: flip-down 0.4s ease-in-out forwards;
+    }
+    @keyframes flip-down {
+      100% { transform: rotateX(-180deg); }
+    }
+    /* Modern minimalist horizontal cut line across the middle */
     .flip-card::after {
       content: '';
       position: absolute;
@@ -67,47 +120,89 @@
       width: 100%;
       height: 1px;
       background: var(--border);
+      z-index: 5;
     }
     .labels {
       font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.5px;
       color: var(--text);
       opacity: 0.4;
-      margin-top: 8px;
-      text-align: center;
-    }
-    .card-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      margin-top: 10px;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
   <button class="toggle-btn" id="themeToggle">🌙</button>
+  
   <div class="clock-container">
     <div class="card-wrapper">
-      <div class="flip-card" id="hours">00</div>
+      <div class="flip-card" id="hours-card">
+        <div class="digit-panel top" id="hr-top">00</div>
+        <div class="digit-panel bottom" id="hr-bottom">00</div>
+        <div class="flipper" id="hr-flipper"></div>
+      </div>
       <div class="labels">HR</div>
     </div>
     <div class="card-wrapper">
-      <div class="flip-card" id="minutes">00</div>
+      <div class="flip-card" id="minutes-card">
+        <div class="digit-panel top" id="min-top">00</div>
+        <div class="digit-panel bottom" id="min-bottom">00</div>
+        <div class="flipper" id="min-flipper"></div>
+      </div>
       <div class="labels">MIN</div>
     </div>
     <div class="card-wrapper">
-      <div class="flip-card" id="seconds">00</div>
+      <div class="flip-card" id="seconds-card">
+        <div class="digit-panel top" id="sec-top">00</div>
+        <div class="digit-panel bottom" id="sec-bottom">00</div>
+        <div class="flipper" id="sec-flipper"></div>
+      </div>
       <div class="labels">SEC</div>
     </div>
   </div>
 
   <script>
+    // --- 1. THEME LOGIC: PERMANENT STORAGE & DEFAULT TO DARK ---
     const toggleBtn = document.getElementById('themeToggle');
+    
+    // Retrieve stored theme, default to 'dark' if empty
+    const savedTheme = localStorage.getItem('notion-clock-theme') || 'dark';
+    document.body.setAttribute('data-theme', savedTheme);
+    toggleBtn.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
     toggleBtn.addEventListener('click', () => {
       const isDark = document.body.getAttribute('data-theme') === 'dark';
-      document.body.setAttribute('data-theme', isDark ? 'light' : 'dark');
-      toggleBtn.textContent = isDark ? '🌙' : '☀️';
+      const newTheme = isDark ? 'light' : 'dark';
+      
+      document.body.setAttribute('data-theme', newTheme);
+      toggleBtn.textContent = newTheme === 'dark' ? '🌙' : '☀️';
+      
+      // Save choice permanently in client container memory
+      localStorage.setItem('notion-clock-theme', newTheme);
     });
+
+    // --- 2. ENGINE LOGIC: TRUE FLIPPING GRAPHICS ---
+    let lastTime = { hrs: '', mins: '', secs: '' };
+
+    function animateCard(cardId, flipperId, topId, bottomId, value) {
+      const topPanel = document.getElementById(topId);
+      const bottomPanel = document.getElementById(bottomId);
+      const flipper = document.getElementById(flipperId);
+
+      // Trigger 3D flip animation sheet if the card string number value updates
+      if (topPanel.textContent !== value) {
+        flipper.className = "flipper animate";
+        
+        // Mid-animation frame split updates text targets cleanly
+        setTimeout(() => {
+          topPanel.textContent = value;
+          bottomPanel.textContent = value;
+          flipper.className = "flipper";
+        }, 350);
+      }
+    }
 
     function updateClock() {
       const now = new Date();
@@ -115,12 +210,21 @@
       const mins = String(now.getMinutes()).padStart(2, '0');
       const secs = String(now.getSeconds()).padStart(2, '0');
       
-      document.getElementById('hours').textContent = hrs;
-      document.getElementById('minutes').textContent = mins;
-      document.getElementById('seconds').textContent = secs;
+      animateCard('hours-card', 'hr-flipper', 'hr-top', 'hr-bottom', hrs);
+      animateCard('minutes-card', 'min-flipper', 'min-top', 'min-bottom', mins);
+      animateCard('seconds-card', 'sec-flipper', 'sec-top', 'sec-bottom', secs);
     }
+
+    // Set layout instantly on start, track ticks every second
+    const setupTime = new Date();
+    document.getElementById('hr-top').textContent = String(setupTime.getHours()).padStart(2, '0');
+    document.getElementById('hr-bottom').textContent = String(setupTime.getHours()).padStart(2, '0');
+    document.getElementById('min-top').textContent = String(setupTime.getMinutes()).padStart(2, '0');
+    document.getElementById('min-bottom').textContent = String(setupTime.getMinutes()).padStart(2, '0');
+    document.getElementById('sec-top').textContent = String(setupTime.getSeconds()).padStart(2, '0');
+    document.getElementById('sec-bottom').textContent = String(setupTime.getSeconds()).padStart(2, '0');
+
     setInterval(updateClock, 1000);
-    updateClock();
   </script>
 </body>
 </html>
